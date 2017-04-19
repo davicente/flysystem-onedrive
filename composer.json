@@ -15,10 +15,10 @@
     "authors": [
         {
             "name": "David Vicente",
-            "email": "davicentef@hotmail.com"
+            "email": "dvicente@solidgeargroup.com"
         }
     ],
     "autoload": {
-        "psr-4": {"JacekBarecki\\FlysystemOneDrive\\": "src/"}
+        "psr-4": {"davicente\\FlysystemOneDrive\\": "src/"}
     }
 }
