@@ -19,6 +19,6 @@
         }
     ],
     "autoload": {
-        "psr-4": {"davicente\\FlysystemOneDrive\\": "src/"}
+        "psr-4": {"JacekBarecki\\FlysystemOneDrive\\": "src/"}
     }
 }
