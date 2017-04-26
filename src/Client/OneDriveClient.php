@@ -120,6 +120,18 @@ class OneDriveClient
     }
 
     /**
+     * @return \Psr\Http\Message\ResponseInterface
+     *
+     * @link https://dev.onedrive.com/resources/drive.htm
+     */
+    public function getUserDriveMetadata()
+    {
+        $url = self::BASE_URI.$this->getPathUserDriveMetadata();
+
+        return $this->getResponse('GET', $url);
+    }
+
+    /**
      * @param string $path
      * @param string $content
      *
@@ -387,6 +399,16 @@ class OneDriveClient
     private function getPathUnderRootDrive($path)
     {
         return 'drive/root:/'.$path;
+    }
+
+    /**
+     * @param string $path
+     *
+     * @return string
+     */
+    private function getPathUserDriveMetadata()
+    {
+        return 'drive';
     }
 
     /**

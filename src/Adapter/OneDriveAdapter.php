@@ -195,6 +195,22 @@ class OneDriveAdapter implements AdapterInterface
         return $result;
     }
 
+
+    public function getUserDriveMetadata() 
+    {
+        $response = $this->client->getUserDriveMetadata();
+        $responseContent = json_decode((string) $response->getBody());
+        return $responseContent;
+    }
+
+
+    public function getOneDriveStorageId() 
+    {
+        $userDriveMetadata = $this->getUserDriveMetadata();
+        return $userDriveMetadata->id;
+    }
+
+
     public function getType($path)
     {
         $metadata = $this->getMetadata($path);
