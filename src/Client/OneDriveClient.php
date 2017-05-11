@@ -20,6 +20,7 @@ class OneDriveClient
     private $guzzle;
 
     const BASE_URI = 'https://api.onedrive.com/v1.0/';
+    const ROOT_PATH = 'drive/root';
 
     /**
      * @param string $accessToken
@@ -302,6 +303,45 @@ class OneDriveClient
 
         return true;
     }
+
+
+    /**
+     * @param string $notificationUrl
+     * @param string $expirationDate
+     * @param string $clientState
+     * @param string $resource
+     *
+     * @return \Psr\Http\Message\ResponseInterface
+     *
+     * @throws OneDriveClientException
+     *
+     * @link https://dev.onedrive.com/webhooks/create-subscription.htm
+     */
+    public function subscribe($notificationUrl, $expirationDate, $clientState=null, $resource = "") 
+    {
+        if(!isset($notificationUrl)) {
+            throw new OneDriveClientException('NotificationUrl is mandatory');
+        }
+
+        $url = self::BASE_URI.self::ROOT_PATH.'/subscriptions';
+
+        $payload = [
+            'notificationUrl' => $notificationUrl,
+            'resource' => $resource,
+            'expirationDateTime' => $expirationDate
+        ];
+
+        if(isset($clientState)) {
+            $payload['clientState'] = $clientState;
+        }
+
+        $headers = [
+            'Content-Type' => 'application/json'
+        ];
+
+        return $this->getResponse('POST', $url, json_encode($payload), $headers);
+    }
+
 
     /**
      * @param string $path
