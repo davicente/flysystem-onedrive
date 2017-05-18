@@ -344,6 +344,27 @@ class OneDriveClient
 
 
     /**
+     * @param string $deltaToken
+     *
+     * @return \Psr\Http\Message\ResponseInterface
+     *
+     * @throws OneDriveClientException
+     *
+     * @link https://dev.onedrive.com/items/view_delta.htm
+     */
+    public function delta($deltaToken=null) 
+    {
+        $url = self::BASE_URI.self::ROOT_PATH.'/view.delta';
+
+        if(isset($deltaToken)) {
+            $url .= '?token='.$deltaToken;
+        }
+
+        return $this->getResponse('GET', $url);
+    }
+
+
+    /**
      * @param string $path
      * @param string $content
      * @param string $conflictBehavior fail|replace|rename

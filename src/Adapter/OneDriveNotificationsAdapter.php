@@ -33,4 +33,20 @@ class OneDriveNotificationsAdapter
     }
 
 
+    /**
+     * @param string $deltaToken
+     *
+     * @return \Psr\Http\Message\ResponseInterface
+     *
+     * @throws OneDriveClientException
+     *
+     * @link https://dev.onedrive.com/items/view_delta.htm
+     */
+    public function delta($deltaToken=null) {
+        $response = $this->client->delta($deltaToken);
+        $responseContent = json_decode((string) $response->getBody());
+        return $responseContent;
+    }
+
+
 }
