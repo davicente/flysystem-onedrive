@@ -184,6 +184,7 @@ class OneDriveAdapter implements AdapterInterface
             $path = $directory.'/'.$item->name;
 
             $flysystemMetadata = new FlysystemMetadata($type, $path);
+            $flysystemMetadata->parentPath = $directory ? $directory: '/';
             $this->updateFlysystemMetadataFromResponseContent($flysystemMetadata, $item);
             $result[] = $flysystemMetadata->toArray();
 
@@ -274,6 +275,7 @@ class OneDriveAdapter implements AdapterInterface
         $flysystemMetadata->mimetype = $isFile ? $responseContent->file->mimeType : null;
         $flysystemMetadata->size = $isFile ? $responseContent->size: null;
         $flysystemMetadata->name = $responseContent->name;
+        $flysystemMetadata->id = $responseContent->id;
         $flysystemMetadata->type = $isFile ? FlysystemMetadata::TYPE_FILE: FlysystemMetadata::TYPE_DIRECTORY;
     }
 

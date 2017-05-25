@@ -30,6 +30,11 @@ class FlysystemMetadata
     /**
      * @var string
      */
+    public $parentPath;
+
+    /**
+     * @var string
+     */
     public $contents;
 
     /**
@@ -61,6 +66,11 @@ class FlysystemMetadata
      * @var string
      */
     public $name;
+
+    /**
+     * @var string
+     */
+    public $id;
 
     /**
      * @param string $type
