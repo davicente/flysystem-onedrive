@@ -261,6 +261,20 @@ class OneDriveAdapter implements AdapterInterface
         return $flysystemMetadata->toArray();
     }
 
+
+    /**
+     * @param string $fileId
+     *
+     * @return \Psr\Http\Message\ResponseInterface
+     */
+    public function getFileMetadata($fileId)
+    {
+        $response = $this->client->getFileMetadata($fileId);
+        $responseContent = json_decode((string) $response->getBody());
+        return $responseContent;
+    }
+
+
     /**
      * @param FlysystemMetadata $flysystemMetadata
      * @param \StdClass         $responseContent

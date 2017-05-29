@@ -120,6 +120,21 @@ class OneDriveClient
         return $this->getResponse('GET', $url);
     }
 
+
+    /**
+     * @param string $fileId
+     *
+     * @return \Psr\Http\Message\ResponseInterface
+     *
+     * @link https://dev.onedrive.com/items/get.htm
+     */
+    public function getFileMetadata($fileId) {
+        $url = self::BASE_URI.$this->getPathFileMetadata($fileId);
+
+        return $this->getResponse('GET', $url);
+    }
+
+
     /**
      * @return \Psr\Http\Message\ResponseInterface
      *
@@ -463,14 +478,24 @@ class OneDriveClient
     }
 
     /**
-     * @param string $path
-     *
      * @return string
      */
     private function getPathUserDriveMetadata()
     {
         return 'drive';
     }
+
+
+    /**
+     * @param string $fileId
+     *
+     * @return string path to get file metadata
+     */
+    private function getPathFileMetadata($fileId)
+    {
+        return 'drive/items/'.$fileId;
+    }
+
 
     /**
      * @param string $method
