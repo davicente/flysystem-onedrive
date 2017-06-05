@@ -3,35 +3,38 @@
 namespace JacekBarecki\FlysystemOneDrive\Tests;
 
 use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Message\Request;
+use GuzzleHttp\Message\Response;
 use GuzzleHttp\Psr7\Stream;
 use JacekBarecki\FlysystemOneDrive\Client\OneDriveClient;
+use League\OAuth2\Client\Tool\QueryBuilderTrait;
 
 class OneDriveClientTest extends \PHPUnit_Framework_TestCase
 {
+    use QueryBuilderTrait;
+
     public function testDownload()
     {
         $client = $this->getMockBuilder('\GuzzleHttp\Client')->getMock();
 
         $accessToken = '123456789';
-        $content = 'downloaded file content';
+        $content = $this->buildQueryStringAsStream('downloaded file content');
 
         $assertRequest = function ($request) use ($accessToken) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'GET')
-                && ($request->getUri()->getHost() == 'api.onedrive.com')
-                && ($request->getUri()->getPath() == '/v1.0/drive/root:/some%20pdf%20document.pdf')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken]);
+                && ($request->getHost() == 'api.onedrive.com')
+                && ($request->getPath() == '/v1.0/drive/root:/some%20pdf%20document.pdf')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken);
             };
         $response = $this->getResponseWithFileMetadata();
 
         $assertRequestFileDownload = function ($request) use ($accessToken) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'GET')
-                && ($request->getUri()->getHost() == 'example.org')
-                && ($request->getUri()->getPath() == '/some/download/url')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken]);
+                && ($request->getHost() == 'example.org')
+                && ($request->getPath() == '/some/download/url')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken);
             };
         $responseFileDownload = new Response('200', [], $content);
 
@@ -42,7 +45,7 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
 
         $oneDriveClient = new OneDriveClient($accessToken, $client);
         $response = $oneDriveClient->download('some pdf document.pdf');
-        $this->assertEquals($content, (string) $response->getBody());
+        $this->assertEquals((string) $content, (string) $response->getBody());
     }
 
     public function testDownloadStream()
@@ -54,9 +57,9 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
         $assertRequest = function ($request) use ($accessToken) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'GET')
-                && ($request->getUri()->getHost() == 'api.onedrive.com')
-                && ($request->getUri()->getPath() == '/v1.0/drive/root:/some%20document.txt')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken]);
+                && ($request->getHost() == 'api.onedrive.com')
+                && ($request->getPath() == '/v1.0/drive/root:/some%20document.txt')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken);
             };
         $response = $this->getResponseWithFileMetadata();
 
@@ -90,13 +93,13 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
         $assertRequest = function ($request) use ($accessToken) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'GET')
-                && ($request->getUri()->getHost() == 'api.onedrive.com')
-                && ($request->getUri()->getPath() == '/v1.0/drive/root:/some%20pdf%20document.pdf')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken])
+                && ($request->getHost() == 'api.onedrive.com')
+                && ($request->getPath() == '/v1.0/drive/root:/some%20pdf%20document.pdf')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken)
                 && ((string) $request->getBody() == '');
             };
 
-        $response = new Response(200, [], 'test response');
+        $response = new Response(200, [],  $this->buildQueryStringAsStream('test response'));
         $client->expects($this->once())->method('send')->with($this->callback($assertRequest))->willReturn($response);
 
         $oneDriveClient = new OneDriveClient($accessToken, $client);
@@ -113,14 +116,14 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
         $assertRequest = function ($request) use ($accessToken, $content) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'PUT')
-                && ($request->getUri()->getHost() == 'api.onedrive.com')
-                && ($request->getUri()->getPath() == '/v1.0/drive/root:/new%20file.txt:/content')
-                && ($request->getUri()->getQuery() == '@name.conflictBehavior=fail')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken])
+                && ($request->getHost() == 'api.onedrive.com')
+                && ($request->getPath() == '/v1.0/drive/root:/new%20file.txt:/content')
+                && ($request->getQuery() == '%40name.conflictBehavior=fail')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken)
                 && ((string) $request->getBody() == $content);
             };
 
-        $response = new Response(200, [], 'test response');
+        $response = new Response(200, [],  $this->buildQueryStringAsStream('test response'));
         $client->expects($this->once())->method('send')->with($this->callback($assertRequest))->willReturn($response);
 
         $oneDriveClient = new OneDriveClient($accessToken, $client);
@@ -137,14 +140,14 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
         $assertRequest = function ($request) use ($accessToken, $content) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'PUT')
-                && ($request->getUri()->getHost() == 'api.onedrive.com')
-                && ($request->getUri()->getPath() == '/v1.0/drive/root:/updated%20file.txt:/content')
-                && ($request->getUri()->getQuery() == '@name.conflictBehavior=replace')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken])
+                && ($request->getHost() == 'api.onedrive.com')
+                && ($request->getPath() == '/v1.0/drive/root:/updated%20file.txt:/content')
+                && ($request->getQuery() == '%40name.conflictBehavior=replace')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken)
                 && ((string) $request->getBody() == $content);
             };
 
-        $response = new Response(200, [], 'test response');
+        $response = new Response(200, [],  $this->buildQueryStringAsStream('test response'));
         $client->expects($this->once())->method('send')->with($this->callback($assertRequest))->willReturn($response);
 
         $oneDriveClient = new OneDriveClient($accessToken, $client);
@@ -161,14 +164,14 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
         $assertRequest = function ($request) use ($accessToken, $content) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'PATCH')
-                && ($request->getUri()->getHost() == 'api.onedrive.com')
-                && ($request->getUri()->getPath() == '/v1.0/drive/root:/old%20filename.txt')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken])
-                && ($request->getHeader('content-type') == ['application/json'])
+                && ($request->getHost() == 'api.onedrive.com')
+                && ($request->getPath() == '/v1.0/drive/root:/old%20filename.txt')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken)
+                && ($request->getHeader('content-type') == 'application/json')
                 && ((string) $request->getBody() == $content);
             };
 
-        $response = new Response(200, [], 'test response');
+        $response = new Response(200, [],  $this->buildQueryStringAsStream('test response'));
         $client->expects($this->once())->method('send')->with($this->callback($assertRequest))->willReturn($response);
 
         $oneDriveClient = new OneDriveClient($accessToken, $client);
@@ -188,11 +191,11 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
             $assertRequestCopy = function ($request) use ($accessToken) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'POST')
-                && ($request->getUri()->getHost() == 'api.onedrive.com')
-                && ($request->getUri()->getPath() == '/v1.0/drive/root:/source.pdf:/action.copy')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken]
-                && ($request->getHeader('content-type') == ['application/json'])
-                && ($request->getHeader('prefer') == ['respond-async'])
+                && ($request->getHost() == 'api.onedrive.com')
+                && ($request->getPath() == '/v1.0/drive/root:/source.pdf:/action.copy')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken
+                && ($request->getHeader('content-type') == 'application/json')
+                && ($request->getHeader('prefer') == 'respond-async')
                 );
             };
             $responseCopy = new Response(202, ['Location' => 'http://example.org/monitor/some_url']);
@@ -200,9 +203,9 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
             $assertRequestMonitor = function ($request) use ($accessToken) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'GET')
-                && ($request->getUri()->getHost() == 'example.org')
-                && ($request->getUri()->getPath() == '/monitor/some_url')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken]);
+                && ($request->getHost() == 'example.org')
+                && ($request->getPath() == '/monitor/some_url')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken);
             };
 
             $responseMonitor = new Response(303);
@@ -210,9 +213,9 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
             $assertRequestMetadata = function ($request) use ($accessToken) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'GET')
-                && ($request->getUri()->getHost() == 'api.onedrive.com')
-                && ($request->getUri()->getPath() == '/v1.0/drive/root:/folder/destination.pdf')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken])
+                && ($request->getHost() == 'api.onedrive.com')
+                && ($request->getPath() == '/v1.0/drive/root:/folder/destination.pdf')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken)
                 && ((string) $request->getBody() == '');
             };
             $responseMetadata = $this->getResponseWithFileMetadata();
@@ -236,14 +239,14 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
         $assertRequest = function ($request) use ($accessToken, $content) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'PATCH')
-                && ($request->getUri()->getHost() == 'api.onedrive.com')
-                && ($request->getUri()->getPath() == '/v1.0/drive/root:/old%20filename.txt')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken])
-                && ($request->getHeader('content-type') == ['application/json'])
+                && ($request->getHost() == 'api.onedrive.com')
+                && ($request->getPath() == '/v1.0/drive/root:/old%20filename.txt')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken)
+                && ($request->getHeader('content-type') == 'application/json')
                 && ((string) $request->getBody() == json_encode($content));
             };
 
-        $response = new Response(200, [], 'test response');
+        $response = new Response(200, [], $this->buildQueryStringAsStream('test response'));
         $client->expects($this->once())->method('send')->with($this->callback($assertRequest))->willReturn($response);
 
         $oneDriveClient = new OneDriveClient($accessToken, $client);
@@ -260,14 +263,14 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
         $assertRequest = function ($request) use ($accessToken, $content) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'POST')
-                && ($request->getUri()->getHost() == 'api.onedrive.com')
-                && ($request->getUri()->getPath() == '/v1.0/drive/root:/documents:/children')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken])
-                && ($request->getHeader('content-type') == ['application/json'])
+                && ($request->getHost() == 'api.onedrive.com')
+                && ($request->getPath() == '/v1.0/drive/root:/documents:/children')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken)
+                && ($request->getHeader('content-type') == 'application/json')
                 && ((string) $request->getBody() == $content);
             };
 
-        $response = new Response(200, [], 'test response');
+        $response = new Response(200, [], $this->buildQueryStringAsStream('test response'));
         $client->expects($this->once())->method('send')->with($this->callback($assertRequest))->willReturn($response);
 
         $oneDriveClient = new OneDriveClient($accessToken, $client);
@@ -283,12 +286,12 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
         $assertRequest = function ($request) use ($accessToken) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'GET')
-                && ($request->getUri()->getHost() == 'api.onedrive.com')
-                && ($request->getUri()->getPath() == '/v1.0/drive/root:/documents/pictures:/children')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken]);
+                && ($request->getHost() == 'api.onedrive.com')
+                && ($request->getPath() == '/v1.0/drive/root:/documents/pictures:/children')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken);
             };
 
-        $response = new Response(200, [], 'test response');
+        $response = new Response(200, [], $this->buildQueryStringAsStream('test response'));
         $client->expects($this->once())->method('send')->with($this->callback($assertRequest))->willReturn($response);
 
         $oneDriveClient = new OneDriveClient($accessToken, $client);
@@ -304,12 +307,12 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
         $assertRequest = function ($request) use ($accessToken) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'DELETE')
-                && ($request->getUri()->getHost() == 'api.onedrive.com')
-                && ($request->getUri()->getPath() == '/v1.0/drive/root:/documents/pictures/some%20picture.jpg')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken]);
+                && ($request->getHost() == 'api.onedrive.com')
+                && ($request->getPath() == '/v1.0/drive/root:/documents/pictures/some%20picture.jpg')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken);
             };
 
-        $response = new Response(204, [], 'successful response');
+        $response = new Response(204, [], $this->buildQueryStringAsStream('successful response'));
         $client->expects($this->once())->method('send')->with($this->callback($assertRequest))->willReturn($response);
 
         $oneDriveClient = new OneDriveClient($accessToken, $client);
@@ -339,12 +342,12 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
         $assertRequest = function ($request) use ($accessToken) {
                 return ($request instanceof Request)
                 && ($request->getMethod() == 'GET')
-                && ($request->getUri()->getHost() == 'api.onedrive.com')
-                && ($request->getUri()->getPath() == '/v1.0/drive/root:/some%20file.txt')
-                && ($request->getHeader('authorization') == ['bearer '.$accessToken]);
+                && ($request->getHost() == 'api.onedrive.com')
+                && ($request->getPath() == '/v1.0/drive/root:/some%20file.txt')
+                && ($request->getHeader('authorization') == 'bearer '.$accessToken);
             };
 
-        $response = new Response(200, [], 'test response');
+        $response = new Response(200, [], $this->buildQueryStringAsStream('test response'));
         $client->expects($this->once())->method('send')->with($this->callback($assertRequest))->willReturn($response);
 
         $oneDriveClient = new OneDriveClient($accessToken, $client);
@@ -371,7 +374,7 @@ class OneDriveClientTest extends \PHPUnit_Framework_TestCase
          */
         private function getResponseWithFileMetadata()
         {
-            $body = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'fileMetadata.json');
+            $body = $this->buildQueryStringAsStream(file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'fileMetadata.json'));
             $response = new Response(200, [], $body);
 
             return $response;

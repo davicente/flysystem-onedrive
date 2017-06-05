@@ -2,13 +2,16 @@
 
 namespace JacekBarecki\FlysystemOneDrive\Client;
 
+use League\OAuth2\Client\Tool\QueryBuilderTrait;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Message\Request;
 use GuzzleHttp\Psr7\Stream;
 
 class OneDriveClient
 {
+    use QueryBuilderTrait;
+
     /**
      * @var string
      */
@@ -206,14 +209,13 @@ class OneDriveClient
             'Content-Type' => 'application/json',
             'Prefer' => 'respond-async',
         ];
-
         $response = $this->getResponse('POST', $url, json_encode($payload), $headers);
         $asyncStatusLocation = $response->getHeader('Location');
 
         //check for the status of an async operation
         $completed = false;
         while (!$completed) {
-            $statusResponse = $this->getResponse('GET', $asyncStatusLocation[0]);
+            $statusResponse = $this->getResponse('GET', $asyncStatusLocation);
 
             $statusCode = $statusResponse->getStatusCode();
             if ($statusCode == '303' || $statusCode == '200') {
@@ -229,7 +231,6 @@ class OneDriveClient
                 sleep(0.5);
             }
         }
-
         return $this->getMetadata($newPath);
     }
 
@@ -510,8 +511,10 @@ class OneDriveClient
         $allHeaders = array_merge($this->getAuthorizationHeader(), $headers);
         $uri = $path;
 
+        if(is_string($body)) {
+            $body = $this->buildQueryStringAsStream($body);
+        }
         $request = new Request($method, $uri, $allHeaders, $body);
-
         return $this->guzzle->send($request);
     }
 
